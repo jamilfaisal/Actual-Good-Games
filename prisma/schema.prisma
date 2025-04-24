@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum FaisalRating {
+  FANTASTIC
+  PRETTY_GOOD
+  NOTABLE
+  YOU_MIGHT_LIKE
+}
+
+enum ReviewStatus {
+  IN_PROGRESS
+  DONE
+}
+
+model Game {
+  id           Int      @id @default(autoincrement())
+  title        String   @unique
+  thumbnailUrl String
+  description  String
+  releaseDate  DateTime
+  developer    String
+  gamePage     String
+  genres       Genre[]  @relation("GameToGenre")
+
+  reviewId Int    @unique
+  review   Review @relation(fields: [reviewId], references: [id], name: "GameReview")
+
+  reviewStatus ReviewStatus @default(IN_PROGRESS)
+
+  userRatings   UserRating[]
+  opencriticAvg Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([title])
+}
+
+model Review {
+  id           Int           @id @default(autoincrement())
+  reviewText   String
+  faisalRating FaisalRating?
+
+  gameReviewed Game? @relation(name: "GameReview")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Genre {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  games Game[] @relation("GameToGenre")
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+  email    String @unique
+
+  userRatings UserRating[]
+
+  @@index([email]) // Define the index here
+}
+
+model UserRating {
+  userId    Int
+  gameId    Int
+  rating    Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  game Game @relation(fields: [gameId], references: [id])
+
+  @@id([userId, gameId])
+  @@index([rating])
+}
