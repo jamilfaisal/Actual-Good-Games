@@ -1,8 +1,8 @@
 import { PrismaClient, ReviewStatus } from "../src/generated/prisma/index.js";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import * as dotenv from "dotenv";
+dotenv.config();
+import * as fs from "fs";
+import * as path from "path";
 import { parse } from "csv-parse/sync";
 
 type CsvRow = {
@@ -13,6 +13,7 @@ type CsvRow = {
   "Game Page": string;
   Completed: string;
   Purchased: string;
+  "Video URL": string;
 };
 
 const prisma = new PrismaClient();
@@ -28,8 +29,11 @@ const ratingMap: Record<
 };
 
 async function seedFromNotionDatabaseAsCSVFile() {
-  const RAWG_API_KEY = "";
-  const pathToNotionCSV = path.join(__dirname, "./Notion_Games.csv");
+  const RAWG_API_KEY = process.env.RAWG_API_KEY || "";
+  const pathToNotionCSV = path.resolve(
+    process.cwd(),
+    "prisma/Notion_Games.csv"
+  );
   const fileContent = fs.readFileSync(pathToNotionCSV, "utf-8");
   const csv_file_rows = parse(fileContent, {
     columns: true,
@@ -80,6 +84,7 @@ async function seedFromNotionDatabaseAsCSVFile() {
       releaseDate,
       developer,
       gamePage: game["Game Page"],
+      videoUrl: game["Video URL"],
       genres:
         genreIds.length > 0
           ? { connect: genreIds.map((id) => ({ id })) }
