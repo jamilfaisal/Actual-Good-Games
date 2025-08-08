@@ -2,16 +2,19 @@
   "name": "actual-good-games",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+  "dev": "next dev --turbopack",
+  "build": "next build",
+  "start": "next start",
+  "lint": "next lint",
+  "seed": "tsx prisma/seed.mts"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
     "bcryptjs": "^3.0.2",
     "csv-parse": "^6.1.0",
+    "dotenv": "^17.2.1",
     "next": "15.3.1",
     "node-fetch": "^2.7.0",
     "react": "^19.0.0",
@@ -29,9 +32,10 @@
     "prisma": "^6.6.0",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.3",
     "typescript": "^5.9.2"
   },
   "prisma": {
-    "seed": "node prisma/seed.js"
+    "seed": "tsx prisma/seed.mts"
   }
 }
