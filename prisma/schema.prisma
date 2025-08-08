@@ -24,6 +24,7 @@ model Game {
   id           Int      @id @default(autoincrement())
   title        String   @unique
   thumbnailUrl String
+  videoUrl     String
   description  String
   releaseDate  DateTime
   developer    String
