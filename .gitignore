@@ -20,6 +20,10 @@ prisma/migrations/
 # Prisma generated files (if any)
 prisma/.generated/
 
+# Ignore generated Prisma client code
+src/generated/prisma/
+!src/generated/prisma/schema.prisma
+
 # Testing coverage
 /coverage
 
