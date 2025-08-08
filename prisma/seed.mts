@@ -33,16 +33,16 @@ const ratingMap: Record<string, $Enums.FaisalRating> = {
 };
 
 async function seedFromNotionDatabaseAsCSVFile(): Promise<void> {
-  const RAWG_API_KEY = process.env.RAWG_API_KEY || "";
   const csvRows = readNotionDatabaseCSVFile();
   const totalRows = csvRows.length;
-
   console.log(
     `Starting database seeding from Notion_Games.csv (${totalRows} rows)...`
   );
   for (const [i, originalGame] of csvRows.entries()) {
     const game = normalizeCSVRow(originalGame);
+
     console.log(`[${i + 1}/${totalRows}] Processing game: ${game.Name}`);
+
     if (isInvalidGame(game)) {
       console.warn(
         `[${i + 1}/${totalRows}] Skipped (invalid data): ${game.Name}`
@@ -50,7 +50,7 @@ async function seedFromNotionDatabaseAsCSVFile(): Promise<void> {
       continue;
     }
 
-    const meta = await fetchGameMetadata(game.Name, RAWG_API_KEY);
+    const meta = await getGameMetadata(game.Name);
     if (!meta) {
       console.warn(
         `[${i + 1}/${totalRows}] No metadata found for game: ${game.Name}`
@@ -70,7 +70,7 @@ async function seedFromNotionDatabaseAsCSVFile(): Promise<void> {
 }
 
 async function persistGameToDB(
-  meta: GenreMeta,
+  meta: GameMeta,
   game: NotionCSVRow,
   genreIds: number[],
   review: Review,
@@ -146,10 +146,8 @@ async function gameExists(title: string): Promise<boolean> {
   return Boolean(await prisma.game.findUnique({ where: { title } }));
 }
 
-async function fetchGameMetadata(
-  gameName: string,
-  apiKey: string
-): Promise<GenreMeta | null> {
+async function getGameMetadata(gameName: string): Promise<GameMeta | null> {
+  const apiKey = process.env.RAWG_API_KEY || "";
   const searchUrl = `https://api.rawg.io/api/games?search=${encodeURIComponent(
     gameName
   )}&key=${apiKey}`;
@@ -182,7 +180,7 @@ async function fetchGameMetadata(
   }
 }
 
-interface GenreMeta {
+interface GameMeta {
   genres: string[];
   releaseDate: Date | null;
   description: string;
@@ -199,7 +197,7 @@ interface Review {
   id: number;
 }
 
-async function persistNewGenresToDB(meta: GenreMeta): Promise<number[]> {
+async function persistNewGenresToDB(meta: GameMeta): Promise<number[]> {
   const genreNames =
     meta.genres && Array.isArray(meta.genres) ? meta.genres : [];
   const genreIds: number[] = [];
@@ -231,14 +229,6 @@ function normalizeCSVRow(originalGame: NotionCSVRow): NotionCSVRow {
     VideoURL: originalGame["Video URL"],
   };
 }
-
-type RawgGameDetails = {
-  id: number;
-  name: string;
-  genres?: { name: string }[];
-  released?: string;
-  background_image?: string;
-};
 
 async function getOpenCriticGameId(gameName: string): Promise<number | null> {
   const searchUrl = `${OPENCRITIC_API_BASE}/game/search?criteria=${encodeURIComponent(
@@ -274,6 +264,14 @@ async function getOpenCriticAvgScore(gameId: number): Promise<number | null> {
     return null;
   }
 }
+
+type RawgGameDetails = {
+  id: number;
+  name: string;
+  genres?: { name: string }[];
+  released?: string;
+  background_image?: string;
+};
 
 async function getGameDetailsFromRAWG(
   searchUrl: string
