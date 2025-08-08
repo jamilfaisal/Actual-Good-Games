@@ -52,3 +52,6 @@ yarn-error.log*
 
 # TypeScript
 *.tsbuild*
+
+# Seed file
+prisma/Notion_Games.csv
